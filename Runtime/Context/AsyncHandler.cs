@@ -50,6 +50,7 @@ namespace Edger.Unity.Context {
         }
 
         private IEnumerator DoHandleInternalAsync(HandleLog<TReq, TRes> log) {
+            yield return new WaitForEndOfFrame();
             HandleLog<TReq, TRes> result = null;
             IEnumerator handle = DoHandleAsync(log.Identity, log.RequestTime, log.Request);
             while (true) {

@@ -74,14 +74,6 @@ namespace Edger.Unity.Context {
             }
         }
 
-        public BlockBusWatcher AddBusWatcher(IBlockOwner owner, Action<Bus, string> block) {
-            BlockBusWatcher result = new BlockBusWatcher(owner, block);
-            if (AddBusWatcher(result)) {
-                return result;
-            }
-            return null;
-        }
-
         public void AddSub(string msg, IBusSub sub) {
             TryAddMsg(msg);
             if (_MsgSubs == null) {
@@ -223,6 +215,10 @@ namespace Edger.Unity.Context {
 
         public bool RemoveBusWatcher(IBusWatcher watcher) {
             return WeakListUtil.Remove(_BusWatchers, watcher);
+        }
+
+        public void AddBusWatcher(IBlockOwner owner, Action<Bus, string> block) {
+            AddBusWatcher(new BlockBusWatcher(owner, block));
         }
     }
 }

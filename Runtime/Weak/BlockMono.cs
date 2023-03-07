@@ -17,7 +17,7 @@ namespace Edger.Unity.Weak {
 
         public override string LogPrefix {
             get {
-                return string.Format("{0} #{1}:D5 @{2}", base.LogPrefix, _Identity, Revision);
+                return string.Format("{0} #{1:D5} @{2} ", base.LogPrefix, _Identity, Revision);
             }
         }
 

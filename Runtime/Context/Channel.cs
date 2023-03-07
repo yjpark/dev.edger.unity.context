@@ -47,5 +47,9 @@ namespace Edger.Unity.Context {
         public bool RemoveEventWatcher(IEventWatcher<EventLog<TEvt>> watcher) {
             return WeakListUtil.Remove(_ChannelWatchers, watcher);
         }
+
+        public void AddEventWatcher(IBlockOwner owner, Action<Aspect, EventLog<TEvt>> block) {
+            AddEventWatcher(new BlockEventWatcher<EventLog<TEvt>>(owner, block));
+        }
     }
 }

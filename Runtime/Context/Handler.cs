@@ -60,7 +60,7 @@ namespace Edger.Unity.Context {
             } else if (IsOk) {
                 return string.Format("[{0}] {1} -> {2}", StatusCode, Request, Response);
             } else {
-                return string.Format("[{0}] {1} ->", StatusCode, Request);
+                return string.Format("[{0}] {1}", StatusCode, Request);
             }
         }
     }
@@ -110,6 +110,10 @@ namespace Edger.Unity.Context {
 
         public bool RemoveResponseWatcher(IEventWatcher<HandleLog<TReq, TRes>> watcher) {
             return WeakListUtil.Remove(_HandlerWatchers, watcher);
+        }
+
+        public void AddResponseWatcher(IBlockOwner owner, Action<Aspect, HandleLog<TReq, TRes>> block) {
+            AddResponseWatcher(new BlockEventWatcher<HandleLog<TReq, TRes>>(owner, block));
         }
     }
 }

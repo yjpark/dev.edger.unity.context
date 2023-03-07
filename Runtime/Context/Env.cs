@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 
+using UnityEngine;
+
 using Edger.Unity;
 using Edger.Unity.Weak;
 
 namespace Edger.Unity.Context {
+    [DisallowMultipleComponent()]
     public class Env : BlockMono {
         private Dictionary<Type, Aspect> _Aspects = null;
 

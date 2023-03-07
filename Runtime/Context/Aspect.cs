@@ -28,7 +28,7 @@ namespace Edger.Unity.Context {
     public sealed class BlockEventWatcher<TEvt> : WeakBlock, IEventWatcher<TEvt> {
         private readonly Action<Aspect, TEvt> _Block;
 
-        public BlockEventWatcher(IBlockOwner owner, Action<Aspect, string> block) : base(owner) {
+        public BlockEventWatcher(IBlockOwner owner, Action<Aspect, TEvt> block) : base(owner) {
             _Block = block;
         }
 

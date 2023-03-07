@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -21,13 +22,17 @@ namespace Edger.Unity.Context {
         }
 
         protected override HandleLog<TReq, TRes> DoHandle(DateTime reqTime, TReq req) {
-            var log = new HandleLog<TReq, TRes>(this, reqTime, req, null);
-            var coroutine = StartCoroutine(DoHandleInternalAsync());
+            var log = new HandleLog<TReq, TRes>(this, reqTime, req);
+            var coroutine = DoHandleInternalAsync(log);
             _RunningCoroutines[log.Identity] = coroutine;
+            StartCoroutine(coroutine);
             return log;
         }
 
-        private void OnAsyncResult(HandleLog<TReq, TRes> log) {
+        private void OnAsyncResult(int reqIdentity, HandleLog<TReq, TRes> log) {
+            if (_RunningCoroutines.ContainsKey(reqIdentity)) {
+                _RunningCoroutines.Remove(reqIdentity);
+            }
             LastAsync = log;
             AdvanceRevision();
             if (LogDebug) {
@@ -38,22 +43,26 @@ namespace Edger.Unity.Context {
 
         private IEnumerator DoHandleInternalAsync(HandleLog<TReq, TRes> log) {
             HandleLog<TReq, TRes> result = null;
-            try {
-                TRes response = default(TRes);
-                IEnumerator handle = DoHandleAsync(log.RequestTime, log.Request, out response);
-                while (handle.MoveNext()) {
-                    yield return handle.Current;
+            TRes response = default(TRes);
+            IEnumerator handle = DoHandleAsync(log.RequestTime, log.Request, out response);
+            while (true) {
+                try {
+                    if (handle.MoveNext() == false) {
+                        break;
+                    }
+                } catch (Exception e) {
+                    result = new HandleLog<TReq, TRes>(this, log.RequestTime, log.Request, StatusCode.InternalError, e);
+                    OnAsyncResult(log.Identity, result);
+                    yield break;
                 }
-                if (response != null) {
-                    result = new HandleLog<TReq, TRes>(this, log.RequestTime, log.Request, response);
-                } else {
-                    result = new HandleLog<TReq, TRes>(this, log.RequestTime, log.Request, StatusCode.InternalError, "<{0}>.DoHandleAsync Failed: reponse == null", GetType());
-                }
-            } catch (Exception e) {
-                result = new HandleLog<TReq, TRes>(this, log.RequestTime, log.Request, StatusCode.InternalError, e);
+                yield return handle.Current;
             }
-            _RunningCoroutines[log.Identity] = null;
-            OnAsyncResult(result);
+            if (response != null) {
+                result = new HandleLog<TReq, TRes>(this, log.RequestTime, log.Request, response);
+            } else {
+                result = new HandleLog<TReq, TRes>(this, log.RequestTime, log.Request, StatusCode.InternalError, "<{0}>.DoHandleAsync Failed: reponse == null", GetType());
+            }
+            OnAsyncResult(log.Identity, result);
         }
 
         protected abstract IEnumerator DoHandleAsync(DateTime reqTime, TReq req, out TRes res);

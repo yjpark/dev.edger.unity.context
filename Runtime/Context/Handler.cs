@@ -14,7 +14,7 @@ namespace Edger.Unity.Context {
         InternalError = 500,
     }
 
-    public abstract class HandleLog<TReq, TRes> : AspectLog {
+    public sealed class HandleLog<TReq, TRes> : AspectLog {
         public readonly DateTime RequestTime;
         public readonly TReq Request;
 
@@ -28,11 +28,18 @@ namespace Edger.Unity.Context {
         public bool IsAccepted { get => StatusCode == StatusCode.Accepted; }
         public bool IsError { get => Error != null; }
 
+        public HandleLog(Handler<TReq, TRes> handler, DateTime reqTime, TReq req) : base(handler) {
+            RequestTime = reqTime;
+            Request = req;
+            Response = default(TRes);
+            StatusCode = StatusCode.Accepted;
+        }
+
         public HandleLog(Handler<TReq, TRes> handler, DateTime reqTime, TReq req, TRes res) : base(handler) {
             RequestTime = reqTime;
             Request = req;
             Response = res;
-            StatusCode = res == null ? StatusCode.Accepted : StatusCode.Ok;
+            StatusCode = StatusCode.Ok;
         }
 
         public HandleLog(Handler<TReq, TRes> handler, DateTime reqTime, TReq req, StatusCode statusCode, Exception error) : base(handler) {
@@ -50,7 +57,7 @@ namespace Edger.Unity.Context {
         public override string ToString() {
             if (IsError) {
                 return string.Format("[{0}] {1} -> {2}", StatusCode, Request, Error);
-            } else if (log.IsOk) {
+            } else if (IsOk) {
                 return string.Format("[{0}] {1} -> {2}", StatusCode, Request, Response);
             } else {
                 return string.Format("[{0}] {1} ->", StatusCode, Request);
@@ -64,17 +71,17 @@ namespace Edger.Unity.Context {
 
         public HandleLog<TReq, TRes> Last { get; private set; }
 
-        public Response<TReq, TRes> HandleRequest(TReq req) {
+        public HandleLog<TReq, TRes> HandleRequest(TReq req) {
             DateTime reqTime = DateTime.UtcNow;
             HandleLog<TReq, TRes> result = null;
             try {
-                var Response = DoHandle(reqTime, req);
+                result = DoHandle(reqTime, req);
             } catch (Exception e) {
                 result = new HandleLog<TReq, TRes>(this, reqTime, req, StatusCode.InternalError, e);
             }
             Last = result;
             AdvanceRevision();
-            if (log.IsError) {
+            if (Last.IsError) {
                 Error("HandleRequest Failed: {0}", Last);
             } else if (LogDebug) {
                 Debug("HandleRequest: {0}", Last);

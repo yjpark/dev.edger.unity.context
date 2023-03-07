@@ -17,6 +17,7 @@ namespace Edger.Unity.Context {
                 Aspect aspect = aspects[i];
                 AddAspect(aspect);
             }
+            AdvanceRevision();
         }
 
         public Aspect GetAspect(Type type) {
@@ -50,6 +51,7 @@ namespace Edger.Unity.Context {
                 _Aspects = new Dictionary<Type, Aspect>();
             }
             _Aspects[aspect.GetType()] = aspect;
+            AdvanceRevision();
             return true;
         }
 
@@ -64,6 +66,7 @@ namespace Edger.Unity.Context {
             }
             T result = gameObject.AddComponent<T>();
             _Aspects[typeof(T)] = result;
+            AdvanceRevision();
             return result;
         }
 

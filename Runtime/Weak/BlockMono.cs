@@ -8,9 +8,7 @@ namespace Edger.Unity.Weak {
     public abstract class BlockMono : BaseMono, IBlockOwner {
         private static int _NextIdentity = 0;
         private int _Identity = _NextIdentity++;
-        public int Identity {
-            get { return _Identity; }
-        }
+        public int Identity { get => _Identity; }
 
         public int Revision { get; private set; } 
         protected void AdvanceRevision() {

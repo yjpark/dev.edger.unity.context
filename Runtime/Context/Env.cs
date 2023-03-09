@@ -82,11 +82,16 @@ namespace Edger.Unity.Context {
             return AddAspect<T>();
         }
 
-        protected AspectReference<T> CacheAspect<T>() where T : Aspect {
-            T aspect = GetOrAddAspect<T>();
-            var cache = new AspectReference<T>(aspect);
-            _AspectCaches[typeof(T)] = cache;
-            return cache;
+        public AspectReference<T> CacheAspect<T>() where T : Aspect {
+            IAspectReference _cache;
+            if (_AspectCaches.TryGetValue(typeof(T), out _cache)) {
+                return _cache.As<AspectReference<T>>();
+            } else {
+                T aspect = GetOrAddAspect<T>();
+                var cache = new AspectReference<T>(aspect);
+                _AspectCaches[typeof(T)] = cache;
+                return cache;
+            }
         }
     }
 }

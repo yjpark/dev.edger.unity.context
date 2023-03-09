@@ -8,6 +8,37 @@ namespace Edger.Unity.Context {
     public abstract class Aspect : BlockMono {
     }
 
+    public interface IAspectReference {
+        public void Clear();
+        public bool SetTarget(object target);
+    }
+
+    public class AspectReference<T> : IAspectReference where T : Aspect {
+        public T Target { get; private set; }
+
+        public AspectReference(T target) {
+            Target = target;
+        }
+
+        public void Clear() {
+            Target = null;
+        }
+
+        public bool SetTarget(object _target) {
+            T target = _target.As<T>();
+            if (target != null) {
+                Target = target;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public void SetTarget(T target) {
+            Target = target;
+        }
+    }
+
     public abstract class AspectLog {
         private static int _NextIdentity = 0;
         private int _Identity = _NextIdentity++;

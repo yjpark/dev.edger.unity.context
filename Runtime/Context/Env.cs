@@ -9,16 +9,23 @@ using Edger.Unity.Weak;
 namespace Edger.Unity.Context {
     [DisallowMultipleComponent()]
     public class Env : BlockMono {
-        private Dictionary<Type, Aspect> _Aspects = null;
+        private Dictionary<Type, Aspect> _Aspects = new Dictionary<Type, Aspect>();
+        private Dictionary<Type, IAspectReference> _AspectCaches = new Dictionary<Type, IAspectReference>();
 
         public void ReloadAspects() {
-            if (_Aspects != null) {
-                _Aspects.Clear();
+            _Aspects.Clear();
+            foreach (var cache in _AspectCaches.Values) {
+                cache.Clear();
             }
             Aspect[] aspects = gameObject.GetComponents<Aspect>();
             for (int i = 0; i < aspects.Length; i++) {
                 Aspect aspect = aspects[i];
                 AddAspect(aspect);
+
+                IAspectReference cache;
+                if (_AspectCaches.TryGetValue(aspect.GetType(), out cache)) {
+                    cache.SetTarget(aspect);
+                }
             }
             AdvanceRevision();
         }
@@ -50,9 +57,6 @@ namespace Edger.Unity.Context {
                 Error("Aspect Already Exist: <{0}> {1} -> {2}", aspect.GetType(), old, aspect);
                 return false;
             }
-            if (_Aspects == null) {
-                _Aspects = new Dictionary<Type, Aspect>();
-            }
             _Aspects[aspect.GetType()] = aspect;
             AdvanceRevision();
             return true;
@@ -63,9 +67,6 @@ namespace Edger.Unity.Context {
             if (old != null) {
                 Error("Aspect Already Exist: <{0}> {1}", typeof(T), old);
                 return null;
-            }
-            if (_Aspects == null) {
-                _Aspects = new Dictionary<Type, Aspect>();
             }
             T result = gameObject.AddComponent<T>();
             _Aspects[typeof(T)] = result;
@@ -79,6 +80,13 @@ namespace Edger.Unity.Context {
                 return aspect;
             }
             return AddAspect<T>();
+        }
+
+        protected AspectReference<T> CacheAspect<T>() where T : Aspect {
+            T aspect = GetOrAddAspect<T>();
+            var cache = new AspectReference<T>(aspect);
+            _AspectCaches[typeof(T)] = cache;
+            return cache;
         }
     }
 }

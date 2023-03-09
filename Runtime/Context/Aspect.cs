@@ -6,6 +6,15 @@ using Edger.Unity.Weak;
 
 namespace Edger.Unity.Context {
     public abstract class Aspect : BlockMono {
+        protected T GetEnv<T>() where T : Env {
+            T env = gameObject.GetComponent<T>();
+            if (env != null) {
+                return env;
+            } else {
+                Error("GetEnv<{0}> Failed: not found", typeof(T).FullName);
+                return null;
+            }
+        }
     }
 
     public interface IAspectReference {

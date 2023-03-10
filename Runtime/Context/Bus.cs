@@ -166,18 +166,15 @@ namespace Edger.Unity.Context {
             _MsgCounts[msg] = GetMsgCount(msg) + 1;
             Last = new MessageLog<TMsg>(this, msg);
             AdvanceRevision();
-
+            if (LogDebug) {
+                Debug("Publish <{0}> {1}: sub_count = {2}, msg_count = {3}",
+                    typeof(TMsg).FullName, msg, GetSubCount(msg), GetMsgCount(msg));
+            }
             if (_MsgSubs != null) {
                 _MsgSubs.Publish(msg, (IBusSub<TMsg> sub) => {
                     sub.OnMsg(this, msg);
                 });
             }
-
-            if (LogDebug) {
-                Debug("Publish <{0}> {1}: sub_count = {2}, msg_count = {3}",
-                    typeof(TMsg).FullName, msg, GetSubCount(msg), GetMsgCount(msg));
-            }
-
             NotifyBusWatchers(msg);
             return true;
         }

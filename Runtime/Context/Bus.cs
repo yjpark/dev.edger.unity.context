@@ -43,7 +43,21 @@ namespace Edger.Unity.Context {
         }
     }
 
+    public class MessageLog<TMsg> : AspectLog {
+        public readonly TMsg Message;
+        public MessageLog(Bus<TMsg> bus, TMsg msg) : base(bus) {
+            Message = msg;
+        }
+    }
+
     public class Bus<TMsg> : Aspect {
+        public Type MessageType { get => typeof(TMsg); }
+
+#if ODIN_INSPECTOR
+        [ShowInInspector, ReadOnly]
+#endif
+        public MessageLog<TMsg> Last { get; private set; }
+
 #if ODIN_INSPECTOR
         [ShowInInspector, ReadOnly]
 #endif
@@ -150,6 +164,7 @@ namespace Edger.Unity.Context {
                 _MsgCounts = new Dictionary<TMsg, int>();
             }
             _MsgCounts[msg] = GetMsgCount(msg) + 1;
+            Last = new MessageLog<TMsg>(this, msg);
             AdvanceRevision();
 
             if (_MsgSubs != null) {

@@ -46,7 +46,7 @@ namespace Edger.Unity.Context {
             LastAsync = log;
             AdvanceRevision();
             if (!LastAsync.IsOk) {
-                Error("HandleRequestAsync Failed: {0}", Last);
+                Error("HandleRequestAsync Failed: {0}", LastAsync);
             } else if (LogDebug) {
                 Debug("HandleRequestAsync: {0}", LastAsync);
             }
